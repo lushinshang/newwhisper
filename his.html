@@ -370,12 +370,14 @@
   <header>
     <div class="header-badge">Project Evolution & Architecture Journey</div>
     <h1>專案演進與架構淬煉歷程</h1>
-    <div class="subtitle">從雙模型分流探索、YouTube 機房 Bot 封鎖突圍，到 Codex 與 Claude Opus 雙頂級 AI 代碼審查</div>
+    <div class="subtitle">從雙模型分流探索、YouTube 機房 Bot 封鎖突圍，到 Codex 與 Claude 雙頂級 AI 代碼審查與全域資安脫敏</div>
     <div class="meta-bar">
       <span><strong>專案名稱：</strong>NewWhisper-Sprint</span>
       <span><strong>歷程區間：</strong>2026-09-27 ～ 2026-09-28</span>
       <span><strong>當前狀態：</strong>Production Ready (v2.0.0)</span>
       <span><strong>測試覆蓋：</strong>27 / 27 單元與整合測試 100% 綠燈</span>
+      <span><strong>資安稽核：</strong>Codex & Claude Code 雙審查 100% 零洩漏通過</span>
+      <span><strong>開源發布：</strong><a href="https://github.com/lushinshang/newwhisper" target="_blank" style="color:var(--primary);text-decoration:underline;">lushinshang/newwhisper</a></span>
     </div>
   </header>
 
@@ -649,6 +651,78 @@ flowchart TD
           <p style="margin-top: 12px;">
             重構完成後，擴充 <code>tests/test_sync_artifacts.py</code> 與 <code>tests/test_run_sh.py</code>，達成 <strong>全量 27 項單元與整合測試 100% 綠燈通過</strong>！
           </p>
+        </div>
+      </div>
+
+      <!-- 階段 7 -->
+      <div class="timeline-item">
+        <div class="timeline-dot success"></div>
+        <div class="timeline-content">
+          <div class="timeline-header">
+            <div class="timeline-title">🚀 階段 7：GitHub 開源發布與 Codex / Claude Code 雙重資安隱私稽核</div>
+            <div class="timeline-date">2026-09-28 01:05</div>
+          </div>
+          <div>
+            <span class="tag tag-green">GitHub 開源發布</span>
+            <span class="tag tag-cyan">Codex 資安掃描</span>
+            <span class="tag tag-amber">Claude Code 資安審查</span>
+            <span class="tag tag-purple">100% 零外露通過</span>
+          </div>
+          <p style="margin-top: 10px;">
+            在正式推播至公開倉庫 <a href="https://github.com/lushinshang/newwhisper" target="_blank" style="color:var(--primary);font-weight:600;text-decoration:underline;">lushinshang/newwhisper</a> 前，啟動紅藍隊思維之全域資安與隱私脫敏稽核，確保具備最高標準之資料保護與合規性：
+          </p>
+          <ul>
+            <li><strong>致謝開源原作者：</strong>在 <code>README.md</code> 深度致謝並引用 <a href="https://github.com/thc1006" target="_blank">thc1006</a> 開源之 <code>breezesprint-25</code> 與 <code>whispersprint</code> 兩大核心轉錄專案。</li>
+            <li><strong>全域開發者路徑脫敏：</strong>全面消滅 <code>/Users/xxx</code> 等本機絕對路徑，改採 <code>os.path.expanduser</code> 動態解析與相對路徑封裝；<code>pyproject.toml</code> 移除本機套件路徑，改以官方 Git 依賴管理。</li>
+            <li><strong>測試案例全面 Mock 去識別化：</strong>改造 <code>tests/test_detect.py</code> 與 <code>tests/test_cache.py</code>，消滅真實 Google Drive ID，改用虛擬 ID 與 <code>monkeypatch</code> 攔截網路請求；範例檔名統一重構為 <code>sample_chinese_lecture_49min</code>。</li>
+            <li><strong>軍規級 <code>.gitignore</code> 防線：</strong>嚴格覆蓋 <code>.env*</code>、<code>credentials.json</code>、<code>service-account*.json</code>、<code>client_secret*.json</code>、<code>id_rsa*</code>、<code>*.pem</code>、<code>*.key</code>、<code>cookies.txt</code> 等憑證。</li>
+            <li><strong>單一純淨 Commit 覆寫：</strong>透過 <code>git commit --amend</code> 與 <code>git push --force</code>，確保遠端 Git 歷史絕對無任何「先提交後刪除」之敏感檔案殘留。</li>
+          </ul>
+
+          <h3 style="margin-top: 16px; font-size: 1.05rem;">🛡️ Codex 與 Claude Code 雙稽核實測結論對照表</h3>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>審查維度 (Audit Dimensions)</th>
+                  <th>檢驗工具與方法</th>
+                  <th>審查判定結果</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>1. 個人識別資訊 (PII)</strong></td>
+                  <td>正則比對 Email、台灣手機、使用者名稱</td>
+                  <td>✅ <strong>安全無外露</strong>（命中處均為 CDN 版本號或 CSS 語法，無個人資訊）</td>
+                </tr>
+                <tr>
+                  <td><strong>2. API Keys / Tokens / 憑證</strong></td>
+                  <td>檢索 <code>AIza</code>、<code>sk-</code>、<code>ghp_</code>、<code>AKIA</code>、PEM 檔頭等特徵</td>
+                  <td>✅ <strong>安全無外露</strong>（命中處皆為 <code>.gitignore</code> 規則或路徑穿越測試字串）</td>
+                </tr>
+                <tr>
+                  <td><strong>3. 本地開發者路徑 / 內網資訊</strong></td>
+                  <td>全文檢索 <code>/Users/</code>、<code>/home/</code>、<code>C:\Users</code>、內網 IP</td>
+                  <td>✅ <strong>安全無外露</strong>（所有路徑皆為相對路徑或動態展開）</td>
+                </tr>
+                <tr>
+                  <td><strong>4. 私人 Google Drive 連結 / 檔名</strong></td>
+                  <td>檢索 <code>drive.google.com</code>、<code>docs.google.com</code></td>
+                  <td>✅ <strong>安全無外露</strong>（均為 <code>YourFileIdHere</code> 等標準佔位符，檔名完全去識別化）</td>
+                </tr>
+                <tr>
+                  <td><strong>5. Git 歷史完整性</strong></td>
+                  <td><code>git log --all --diff-filter=A</code> 全歷史檔名審查</td>
+                  <td>✅ <strong>乾淨無殘留</strong>（單一初始 Commit，無歷史敏感檔案殘存）</td>
+                </tr>
+                <tr>
+                  <td><strong>6. <code>.gitignore</code> 防禦邊界</strong></td>
+                  <td>靜態規則邊界比對與實體驗證</td>
+                  <td>✅ <strong>防護完備</strong>（全盤阻斷金鑰、憑證、暫存與快取檔案）</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
