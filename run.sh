@@ -247,7 +247,7 @@ EXEC_STATUS=${PIPESTATUS[1]}
 set -e
 
 # 若遠端觸發 Bot 限制、403 Forbidden 或下載異常，自動啟用本地住宅網路極速救援直傳
-if [ $EXEC_STATUS -ne 0 ] && grep -qE "FALLBACK_REQUIRED|BOT_DETECTED|403|Forbidden|Sign in to confirm|confirm you" "$LOG_PIPE"; then
+if grep -qE "FALLBACK_REQUIRED|BOT_DETECTED|403|Forbidden|Sign in to confirm|confirm you" "$LOG_PIPE"; then
     echo ""
     echo -e "${YELLOW}⚠️ [自適應機制] 偵測到雲端機房 IP 下載受阻 (403/429)，立即無縫啟動本地住宅網路救援直傳...${NC}"
     LOCAL_STAGING="${SCRIPT_DIR}/output/.staging"
@@ -263,11 +263,19 @@ print(wavs[0])
     
     echo -e "${BLUE}🚀 [接力推論] 音訊直傳完畢，重啟遠端 GPU 推論管線...${NC}"
     ENV_INJECT=$(build_env_inject "$URL" "$ENGINE" "$TITLE_BASE" "/content/audio_staging/input.wav")
-    { echo "$ENV_INJECT"; cat "$EXEC_SCRIPT"; } | uv run --directory "$SCRIPT_DIR" colab exec -s "$SESSION_NAME" --timeout 3600
+    { echo "$ENV_INJECT"; cat "$EXEC_SCRIPT"; } | uv run --directory "$SCRIPT_DIR" colab exec -s "$SESSION_NAME" --timeout 3600 2>&1 | tee "$LOG_PIPE"
+fi
+
+# 8. 驗證遠端轉錄是否確實完成
+if ! grep -q "TRANSCRIPTION_COMPLETED" "$LOG_PIPE"; then
+    echo ""
+    echo -e "${RED}❌ 遠端轉錄管線未順利完成，請檢視上方遠端錯誤日誌！${NC}"
+    rm -f "$LOG_PIPE"
+    exit 1
 fi
 rm -f "$LOG_PIPE"
 
-# 8. 同步產物回本地
+# 9. 同步產物回本地
 echo ""
 echo -e "${BLUE}📦 [產物回傳] 正在同步遠端字幕與 Manifest...${NC}"
 SYNC_OK=false

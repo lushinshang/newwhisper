@@ -193,9 +193,17 @@ def download_from_youtube(video_url: str, output_dir: str = ".") -> list[str]:
         "noplaylist": True,
         "quiet": False,
         "no_warnings": True,
+        "retries": 5,
+        "fragment_retries": 5,
+        "extractor_retries": 2,
+        "file_access_retries": 2,
+        "socket_timeout": 30,
+        "sleep_interval_requests": 1,
+        "sleep_interval": 2,
+        "max_sleep_interval": 5,
         "extractor_args": {
             "youtube": {
-                "player_client": ["android", "ios", "mweb"]
+                "player_client": ["tv", "android"]
             }
         },
         "postprocessors": [
