@@ -1,7 +1,7 @@
-# Colab Dual ASR 智慧語音轉錄雙引擎分流排程系統
+# Colab Dual ASR：智慧雙引擎語音轉錄系統
 
-> **工業級、無人值守、智慧雙引擎分流之雲端語音轉錄管線**  
-> 透過本地 CLI 驅動，直連 Google Colab 原生 Control Plane API + Jupyter Kernel WSS 通道，租賃 Google AI Pro GPU（L4 / T4）完成高通量推論，並具備自適應住宅 IP 救援與原子化產物同步機制。
+> **本機 CLI 原生直連 Google Colab，將 Google AI Pro 每月 200 點運算額度轉化為私有高通量 GPU 語音轉錄算力池。**  
+> 繁體中文採用中研院聯發科特化之 Breeze2-Whisper、國際多語採用 faster-whisper large-v3，依音訊語言全自動分流；遇 YouTube 機房 IP 封鎖（429）自動切換住宅 IP 救援；任務結束或異常中斷必定自動關機，不留殭屍實例燒點數。
 
 [![Version](https://img.shields.io/badge/version-v2.0.0-blue.svg)](prd.html)
 [![GitHub Repo](https://img.shields.io/badge/github-lushinshang%2Fnewwhisper-181717.svg?logo=github)](https://github.com/lushinshang/newwhisper)
@@ -26,26 +26,31 @@
 
 ---
 
-## 🌟 核心特色
+## 🌟 核心特色與工程設計
 
-1. **雙模型智慧分流（繁中精準 vs 國際多語）**：
-   - **BreezeSprint-25（台灣繁中最佳化）**：引用自 [thc1006/breezesprint-25](https://github.com/thc1006/breezesprint-25)，採用中研院聯發科開源之 Breeze2-Whisper 語音模型，針對台灣語境、口音、專有名詞與標點符號進行特化重構。
-   - **WhisperSprint（國際多語通用）**：引用自 [thc1006/whispersprint](https://github.com/thc1006/whispersprint)，基於 `faster-whisper` (CTranslate2) large-v3 模型，具備國際多國語言超高通量批量轉錄能力。
-   - **方案 C 混合語言探測**：優先讀取影片中繼資料（標題與字幕標籤），必要時截取前 15 秒短音訊特徵分析，5 秒內無人介入自動智慧調度。
-2. **Google Colab 原生直連（零第三方跳板）**：
-   - 捨棄傳統 WebUI、Cloudflare Tunnel 或 ngrok 跳板，直接利用 `google-colab-cli` 原生對接 Control Plane API 與 Jupyter Kernel WebSocket (WSS)。
-3. **自適應住宅 IP 雙軌救援（突破 YouTube 429 Bot 封鎖）**：
-   - 第一軌（雲端高頻寬優先）：由遠端 VM 直接拉取音訊，耗時少、零本地頻寬負擔。
-   - 第二軌（住宅 IP 救援）：若遠端遭遇 YouTube 機房 IP 阻擋（`Sign in to confirm you're not a bot`），遠端自動回報，本機自動以家用住宅 IP 抓取、轉為 16kHz PCM16 Mono 音訊並直傳 VM 接續推論，全流程無感自癒。
-4. **前置產物快取（0 雲端延遲秒級交付）**：
-   - 在進行任何網路連線與雲端巡檢前，優先檢驗本地成果是否存在且通過 `verify_manifest` SHA-256 雜湊驗證。二次執行僅需 **0.2 秒** 秒級交付，0 算力點數浪費。
-5. **嚴格點數止血守護（0 殭屍 VM 殘留）**：
-   - 具備 POSIX 信號攔截（SIGINT 130、SIGTERM 143、EXIT），異常或中斷必定觸發 `colab stop`。啟動前自動巡檢清理歷史殘留孤兒會話。
-6. **原子化同步與安全防護（雙專家 Review 淬煉）**：
-   - 歷經 **OpenAI Codex (GPT-6 Astra)** 與 **Anthropic Claude Code (Opus)** 雙頂級 AI 審查。
-   - 採用 **Base64 + JSON 安全序列化傳參**，徹底消滅 Bash 注入風險。
-   - 實作 **200 UTF-8 Bytes 安全檔名截斷** 與合法省略號 `...` 保留，防止 Linux ext4 崩潰。
-   - 採用 **Staging 暫存下載與原子替換 (Atomic Sync)**，杜絕傳輸中斷污染既有良品。
+1. **雙模型語境特化與動態切換**：
+   - 🇹🇼 **BreezeSprint-25（台灣繁中特化）**：引用自 [thc1006/breezesprint-25](https://github.com/thc1006/breezesprint-25)，基於 Breeze2-Whisper 語音模型，針對台灣用語、口音與精確全形標點符號最佳化，消除傳統 Whisper 容易夾雜簡中字詞或逗點生硬的痛點。
+   - 🌐 **WhisperSprint（國際多語通用）**：引用自 [thc1006/whispersprint](https://github.com/thc1006/whispersprint)，採用 CTranslate2 (faster-whisper large-v3) 高通量推論引擎，適合多國語言、跨國會議與英語大課。
+   - 🧠 **智慧混合語言偵測**：優先讀取影片中繼資料（標籤與標題），若無法判定則自動切片前 15 秒短音訊特徵分析，5 秒內全自動決定最佳推論引擎，杜絕人工介入。
+2. **算力經濟學：Google AI Pro 200 點額度效益最大化**：
+   - 善用 Google AI Pro 方案每月提供的 **200 點 Colab 運算額度 (Compute Units)**，將訂閱權益直接變現為私有 GPU 推論伺服器。
+   - **實測數據依據（Colab L4 GPU）**：
+     - 49 分鐘台灣繁中演講：推論耗時約 **3 分鐘**（~180 秒）。
+     - 61 分鐘 MIT 英語大課：推論耗時約 **3.5 分鐘**（210 秒）。
+   - 單次 1 小時影音轉錄僅消耗約 **0.2～0.5 點** 算力，每月 200 點足以從容轉錄數百小時高質量影音。
+3. **Google Colab 原生直連（零跳板、即用即走）**：
+   - 捨棄自行維運昂貴雲端 VM，亦無須透過 WebUI、Cloudflare Tunnel 或 ngrok 等第三方跳板。
+   - 本機終端透過 `google-colab-cli` 原生對接 Colab Control Plane API 與 Jupyter Kernel WebSocket (WSS)，一行指令完成環境掛載、代碼執行與產物同步。
+4. **自適應住宅 IP 救援機制（突破 YouTube 429 Bot 封鎖）**：
+   - 第一軌（雲端高頻寬優先）：由遠端 VM 直接拉取音訊，耗時極短、零本地頻寬負擔。
+   - 第二軌（住宅 IP 救援）：若遠端機房 IP 被 YouTube 阻擋（`Sign in to confirm you're not a bot`），遠端自動回報，本機自動以家用住宅 IP 抓取音訊並直傳 Colab 接續推論，全流程無感自癒。
+5. **前置產物快取（0 雲端延遲秒級交付）**：
+   - 在建立雲端連線前，優先檢驗本地成果是否存在且通過 `verify_manifest` SHA-256 雜湊校驗。重複呼叫僅需 **0.2 秒** 秒級交付，0 算力點數浪費。
+6. **嚴格點數止血守護（0 殭屍 VM 殘留）**：
+   - POSIX 訊號捕捉（SIGINT 130、SIGTERM 143、EXIT）確保退出時必定觸發 `colab stop`。每次啟動前自動巡檢清理歷史殘留孤兒實例。
+7. **原子化同步與安全防護（雙專家 Review 淬煉）**：
+   - 歷經 **OpenAI Codex** 與 **Anthropic Claude Code** 雙頂級 AI 審查。
+   - 採用 **Base64 + JSON 安全序列化傳參** 杜絕 Bash 注入、**200 UTF-8 Bytes 安全檔名截斷**、**Staging 暫存隔離下載** 與 **SHA-256 數位簽章**。
 
 ---
 
@@ -61,7 +66,7 @@ flowchart TD
         
         CacheCheck -- "未命中" --> Reconcile["孤兒 Session 巡檢清理<br>(清理殘留殭屍 VM)"]
         Reconcile --> RunSh["調度核心 (run.sh)"]
-        RunSh --> Detect["方案 C 混合語言探測<br>(title/subtitles + 15s 短音訊)"]
+        RunSh --> Detect["智慧混合語言偵測<br>(中繼資料優先 + 15s 短音訊特徵備援)"]
         
         Detect --> Decision{"語言分流"}
         Decision -- "中文" --> Breeze["BreezeSprint-25 (Breeze2-Whisper)"]
@@ -128,17 +133,22 @@ uv sync
 ./run.sh "https://example.com/audio/sample.mp3"
 ```
 
-### 指定參數用法
+### 指定參數用法（手動覆寫與算力調配）
 ```bash
-# 強制指定以繁中 Breeze2 引擎轉錄
+# 強制指定以繁中 Breeze2 引擎轉錄 (適合中英夾雜、台灣在地時事/科技演講)
 ./run.sh "https://example.com/audio.mp3" --lang zh
 
-# 強制指定以英文 Whisper 引擎轉錄
+# 強制指定以英文 faster-whisper 引擎轉錄 (適合全英語授課、國際多語研討會)
 ./run.sh "https://example.com/audio.mp3" --lang en
 
-# 偏好指定租賃 T4 GPU (預設為優先租賃 L4)
+# 點數精省模式：指定租賃 T4 GPU (預設優先租賃推論極速之 L4 GPU)
 ./run.sh "https://example.com/audio.mp3" --gpu T4
 ```
+
+> **💡 模型切換與 GPU 選型指南**：
+> - **預設模式（不加參數）**：系統會自動探測語言，繁中自動派送 Breeze2、非中文自動派送 faster-whisper。
+> - **何時覆寫 `--lang`？** 若影片標題為英文（例如 `Tech Talk Ep.12`）但內部實為中文演講，或混合語音無法自動判定時，建議明確加上 `--lang zh`。
+> - **何時覆寫 `--gpu`？** 系統預設租賃 L4 GPU（推論極速，約 17~20x 即時速度）；若 Colab 尖峰時段 L4 配額較緊，或希望進一步精打細算點數開銷，可加上 `--gpu T4` 換取更低點數消耗。
 
 ---
 
