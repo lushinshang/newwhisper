@@ -33,15 +33,18 @@ def ensure_remote_environment():
         subprocess.run(["apt-get", "update", "-qq"], check=False)
         subprocess.run(["apt-get", "install", "-y", "-qq", "ffmpeg"], check=False)
 
-    pkgs = ["yt-dlp", "gdown", "pydub", "requests"]
+    pkgs = ["gdown", "pydub", "requests"]
     try:
         import gdown
         import pydub
         import requests
-        import yt_dlp
     except ImportError:
-        print("📦 正在安裝通用音訊處理套件 (yt-dlp, gdown, pydub, requests)...")
+        print("📦 正在安裝通用音訊處理套件 (gdown, pydub, requests)...")
         subprocess.run([sys.executable, "-m", "pip", "install", "-q"] + pkgs, check=False)
+
+    # 強制升級 yt-dlp 至最新版本，確保具備最新 YouTube n-sig / cipher 解密修復能力
+    print("📦 正在同步升級遠端 yt-dlp 至最新版本以規避風控...")
+    subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-U", "yt-dlp"], check=False)
     print("✅ 遠端基礎執行環境就緒！")
 
 
@@ -153,8 +156,7 @@ def download_from_youtube(url: str, output_dir: str = ".") -> str:
             return filename
     except Exception as e:
         err_str = str(e)
-        if "confirm you’re not a bot" in err_str or "Sign in to confirm" in err_str or "bot" in err_str.lower():
-            print("⚠️ [BOT_DETECTED] YouTube 遠端機房 IP 遭遇 Bot 限制，正在觸發本地救援機制...", flush=True)
+        print(f"⚠️ [FALLBACK_REQUIRED] YouTube 遠端機房 IP 拉取音訊失敗 ({err_str})，正在觸發本地住宅 IP 救援機制...", flush=True)
         raise
 
 

@@ -246,10 +246,10 @@ set +e
 EXEC_STATUS=${PIPESTATUS[1]}
 set -e
 
-# 若遠端觸發 Bot 檢測攔截，自動啟用本地住宅網路極速救援直傳
-if [ $EXEC_STATUS -ne 0 ] && grep -qE "BOT_DETECTED|Sign in to confirm you’re not a bot" "$LOG_PIPE"; then
+# 若遠端觸發 Bot 限制、403 Forbidden 或下載異常，自動啟用本地住宅網路極速救援直傳
+if [ $EXEC_STATUS -ne 0 ] && grep -qE "FALLBACK_REQUIRED|BOT_DETECTED|403|Forbidden|Sign in to confirm|confirm you" "$LOG_PIPE"; then
     echo ""
-    echo -e "${YELLOW}⚠️ [自適應機制] 偵測到雲端機房 IP 遭遇 YouTube Bot 攔截，立即無縫啟動本地住宅網路救援直傳...${NC}"
+    echo -e "${YELLOW}⚠️ [自適應機制] 偵測到雲端機房 IP 下載受阻 (403/429)，立即無縫啟動本地住宅網路救援直傳...${NC}"
     LOCAL_STAGING="${SCRIPT_DIR}/output/.staging"
     mkdir -p "$LOCAL_STAGING"
     PRELOAD_WAV=$(uv run --directory "$SCRIPT_DIR" python3 -c "
