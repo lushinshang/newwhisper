@@ -1,0 +1,61 @@
+# Python 虛擬環境
+.venv/
+venv/
+ENV/
+env/
+
+# Python 字節碼與快取
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 作業系統暫存
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 影音與推論暫存檔
+*.mp3
+*.mp4
+*.wav
+*.aac
+*.m4a
+*.webm
+*.tmp
+*.log
+.staging/
+scratch/
+
+# 推論輸出（保留 output 目錄結構，忽略內部生成之產物）
+output/*
+!output/.gitkeep
+
+# 第三方開源子專案（遠端 Colab 會自動 clone 原作者倉庫）
+breezesprint-25/
+whispersprint/
+
+# 外部工具與編輯器暫存
+.playwright-mcp/
+.vscode/
+.idea/
+
+# 敏感憑證、環境變數與金鑰（防誤入庫）
+.env
+.env.*
+*.env
+cookies.txt
+credentials.json
+service-account*.json
+client_secret*.json
+id_rsa*
+id_ed25519*
+*.pem
+*.key

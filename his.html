@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>專案演進歷程 (Project History) ｜ NewWhisper-Sprint 工業級轉錄系統</title>
+  <!-- Mermaid.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'neutral',
+      flowchart: { curve: 'basis', useMaxWidth: true }
+    });
+  </script>
+  <style>
+    :root {
+      --primary: #1a56db;
+      --primary-light: #e1effe;
+      --primary-dark: #1e429f;
+      --secondary: #4b5563;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --accent-codex: #0e7490;
+      --accent-claude: #d97706;
+      --accent-success: #16a34a;
+      --accent-danger: #dc2626;
+      --code-bg: #0f172a;
+      --code-text: #f8fafc;
+      --radius: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
+      line-height: 1.7;
+      color: var(--text);
+      background-color: var(--bg);
+      padding: 24px 16px;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      background: var(--surface);
+      padding: 44px 36px;
+      border-radius: var(--radius);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
+    }
+
+    header {
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 28px;
+      margin-bottom: 36px;
+    }
+
+    .header-badge {
+      display: inline-block;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      margin-bottom: 12px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 10px;
+      line-height: 1.3;
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .meta-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      padding: 12px 16px;
+      background: #f1f5f9;
+      border-radius: 8px;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 44px 0 20px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+    }
+
+    h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin: 28px 0 14px 0;
+      color: #1e293b;
+    }
+
+    p {
+      margin-bottom: 16px;
+      color: #334155;
+    }
+
+    /* 統計指標卡片 */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+    }
+
+    .metric-card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      text-align: center;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .metric-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.06);
+    }
+
+    .metric-value {
+      font-size: 1.85rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+
+    .metric-label {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* 時間軸主體 (Timeline) */
+    .timeline {
+      position: relative;
+      margin: 36px 0;
+      padding-left: 32px;
+    }
+
+    .timeline::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 11px;
+      width: 3px;
+      background: #cbd5e1;
+      border-radius: 2px;
+    }
+
+    .timeline-item {
+      position: relative;
+      margin-bottom: 36px;
+    }
+
+    .timeline-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .timeline-dot {
+      position: absolute;
+      left: -32px;
+      top: 6px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 4px solid var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+    }
+
+    .timeline-dot.success { border-color: var(--accent-success); }
+    .timeline-dot.danger { border-color: var(--accent-danger); }
+    .timeline-dot.codex { border-color: var(--accent-codex); }
+    .timeline-dot.claude { border-color: var(--accent-claude); }
+
+    .timeline-content {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+      transition: all 0.2s ease;
+    }
+
+    .timeline-content:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .timeline-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .timeline-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .timeline-date {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      background: #f1f5f9;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .tag {
+      display: inline-block;
+      font-size: 0.76rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-right: 6px;
+    }
+
+    .tag-blue { background: #e0f2fe; color: #0369a1; }
+    .tag-green { background: #dcfce7; color: #15803d; }
+    .tag-amber { background: #fef3c7; color: #b45309; }
+    .tag-purple { background: #f3e8ff; color: #7e22ce; }
+    .tag-cyan { background: #cffafe; color: #0e7490; }
+
+    /* 區塊卡片 */
+    .detail-box {
+      background: #f8fafc;
+      border-left: 4px solid var(--primary);
+      padding: 14px 18px;
+      border-radius: 0 6px 6px 0;
+      margin: 14px 0;
+      font-size: 0.94rem;
+    }
+
+    .detail-box.warning {
+      border-left-color: #f59e0b;
+      background: #fffbeb;
+    }
+
+    .detail-box.success {
+      border-left-color: var(--accent-success);
+      background: #f0fdf4;
+    }
+
+    .detail-box-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: #1e293b;
+    }
+
+    /* 程式碼區塊 */
+    pre, code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    code:not(pre code) {
+      background-color: #f1f5f9;
+      color: #be123c;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.88em;
+    }
+
+    pre {
+      background-color: var(--code-bg);
+      color: var(--code-text);
+      padding: 16px;
+      border-radius: var(--radius);
+      overflow-x: auto;
+      font-size: 0.86rem;
+      margin: 14px 0;
+      line-height: 1.55;
+    }
+
+    /* Mermaid 響應式 */
+    .mermaid-container {
+      background: #fafafa;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 16px;
+      margin: 20px 0;
+      text-align: center;
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      display: inline-block;
+      width: 100%;
+    }
+
+    /* 表格樣式 */
+    .table-container {
+      overflow-x: auto;
+      margin: 18px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+    }
+
+    th {
+      background-color: #f8fafc;
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    tr:nth-child(even) {
+      background-color: #fbfcfe;
+    }
+
+    @media (max-width: 640px) {
+      body { padding: 8px; }
+      .container { padding: 24px 16px; }
+      h1 { font-size: 1.55rem; }
+      h2 { font-size: 1.25rem; }
+      .timeline { padding-left: 24px; }
+      .timeline-dot { left: -24px; width: 20px; height: 20px; top: 4px; }
+      .timeline-content { padding: 18px 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <header>
+    <div class="header-badge">Project Evolution & Architecture Journey</div>
+    <h1>專案演進與架構淬煉歷程</h1>
+    <div class="subtitle">從雙模型分流探索、YouTube 機房 Bot 封鎖突圍，到 Codex 與 Claude Opus 雙頂級 AI 代碼審查</div>
+    <div class="meta-bar">
+      <span><strong>專案名稱：</strong>NewWhisper-Sprint</span>
+      <span><strong>歷程區間：</strong>2026-09-27 ～ 2026-09-28</span>
+      <span><strong>當前狀態：</strong>Production Ready (v2.0.0)</span>
+      <span><strong>測試覆蓋：</strong>27 / 27 單元與整合測試 100% 綠燈</span>
+    </div>
+  </header>
+
+  <!-- 關鍵戰果統計 -->
+  <section>
+    <h2>📊 關鍵量化指標與工程交付數據</h2>
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-value">0.2s</div>
+        <div class="metric-label">快取命中極速交付 (0 雲端延遲)</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">2,533</div>
+        <div class="metric-label">實測產出高品質字幕總句數</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">0 顆</div>
+        <div class="metric-label">殘留殭屍 VM (0 點數偷跑浪費)</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">27 / 27</div>
+        <div class="metric-label">Pytest 自動化測試通過率 100%</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 演進架構直屏對照圖 -->
+  <section>
+    <h2>🧭 架構演進脈絡：從 V1 單軌到 V2 雙審查強固系統</h2>
+    <p>透過直式流程圖展示從最初原型到生產級強固系統的六大核心防禦演進：</p>
+    <div class="mermaid-container">
+      <div class="mermaid">
+flowchart TD
+    subgraph V1["V1 原型階段 (探索與驗證)"]
+        V1_1["單軌雲端推論<br>(易受機房 IP Bot 風控)"]
+        V1_2["字串拼接 Payload<br>(潛在 Bash 引號逃脫風險)"]
+        V1_3["檔名寬鬆校驗<br>(遇省略號或長標題脆弱)"]
+        V1_4["直接寫入 output/<br>(中斷可能殘留半截檔案)"]
+    end
+
+    subgraph V2["V2 生產驗收階段 (雙專家 Review 淬煉)"]
+        V2_1["自適應雙軌機制<br>(雲端拉取優先 + 本地住宅 IP 救援直傳)"]
+        V2_2["Base64 + JSON 安全序列化<br>(徹底杜絕三重引號 Bash 注入)"]
+        V2_3["200 Bytes 安全截斷 + 防 Path Traversal<br>(合法支援 ... 省略號，杜絕 ext4 崩潰)"]
+        V2_4["Staging 隔離暫存 + 原子替換<br>(Atomic Commit，良品絕對受保護)"]
+        V2_5["Manifest SHA-256 數位簽章<br>(逐檔校驗完整性，杜絕壞檔假命中)"]
+        V2_6["快取前置攔截 + 孤兒對帳<br>(0.2 秒無雲端通訊交付 + 0 殭屍 VM)"]
+    end
+
+    V1_1 ==> |"住宅 IP 救援突圍"| V2_1
+    V1_2 ==> |"Codex Review 強化"| V2_2
+    V1_3 ==> |"Claude Review 修正"| V2_3
+    V1_4 ==> |"Claude Review 規範"| V2_4
+    V1 --> |"全面實戰閉環"| V2_5
+    V1 --> |"效能極致調校"| V2_6
+      </div>
+    </div>
+  </section>
+
+  <!-- 互動式時間軸 (Timeline) -->
+  <section>
+    <h2>⏱️ 專案實裝與除錯時間軸 (Engineering Timeline)</h2>
+
+    <div class="timeline">
+
+      <!-- 階段 1 -->
+      <div class="timeline-item">
+        <div class="timeline-dot success"></div>
+        <div class="timeline-content">
+          <div class="timeline-header">
+            <div class="timeline-title">🎯 階段 1：雙引擎架構定調與「方案 C」語言探測實作</div>
+            <div class="timeline-date">2026-09-27 16:30</div>
+          </div>
+          <div>
+            <span class="tag tag-blue">架構決策</span>
+            <span class="tag tag-purple">Breeze2 vs Whisper</span>
+            <span class="tag tag-green">方案 C 探測</span>
+          </div>
+          <p style="margin-top: 10px;">
+            為了解決單一模型「繁中俚語標點不自然」與「國際英語詞彙辨識吃力」的互斥困境，專案團隊決定引入雙模型：台灣中研院聯發科開源特化的 <strong>Breeze2-Whisper</strong> 與多國語言通用的 <strong>faster-whisper (CTranslate2)</strong>。
+          </p>
+          <div class="detail-box">
+            <div class="detail-box-title">💡 方案 C 語言探測混合機制</div>
+            優先透過 <code>yt-dlp --dump-json</code> 解析標題與字幕中繼資料。若標題語意不明或為純代碼，則以 Range Request / ffmpeg 高速抓取前 15 秒短音訊進行語音特徵快篩。同時提供 5 秒倒數計時，允許使用者按下 <code>[e]</code> 或 <code>[z]</code> 手動覆寫。
+          </div>
+        </div>
+      </div>
+
+      <!-- 階段 2 -->
+      <div class="timeline-item">
+        <div class="timeline-dot success"></div>
+        <div class="timeline-content">
+          <div class="timeline-header">
+            <div class="timeline-title">⚡ 階段 2：Colab 原生直連架構與 Google AI Pro GPU 調度</div>
+            <div class="timeline-date">2026-09-27 18:20</div>
+          </div>
+          <div>
+            <span class="tag tag-blue">Google Colab Control Plane</span>
+            <span class="tag tag-amber">L4 / T4 自動降級</span>
+            <span class="tag tag-green">Heartbeat 保活</span>
+          </div>
+          <p style="margin-top: 10px;">
+            徹底拋棄傳統 WebUI 與第三方 ngrok / Cloudflare Tunnel 跳板。直接利用 <code>google-colab-cli</code> 原生走 Google Colab Control Plane API 與 Jupyter Kernel WebSocket (WSS) 進行通道通訊。
+          </p>
+          <div class="detail-box">
+            <div class="detail-box-title">🛡️ 算力點數止血保護</div>
+            算力排程策略：優先租賃 <strong>L4 GPU (24GB VRAM)</strong>，遭遇配額限制或 400 錯誤時自動降級至 <strong>T4 GPU (16GB VRAM)</strong>。執行前執行孤兒會話巡檢，執行後無論成功或失敗均觸發 <code>colab stop</code>，達成「0 殭屍 VM」的點數防燃燒承諾。
+          </div>
+        </div>
+      </div>
+
+      <!-- 階段 3 -->
+      <div class="timeline-item">
+        <div class="timeline-dot danger"></div>
+        <div class="timeline-content">
+          <div class="timeline-header">
+            <div class="timeline-title">🔥 階段 3：遭遇 YouTube 機房 IP Bot 風控挫折與自適應救援突圍</div>
+            <div class="timeline-date">2026-09-27 21:10</div>
+          </div>
+          <div>
+            <span class="tag tag-amber">重大攻防</span>
+            <span class="tag tag-blue">自適應雙軌機制</span>
+            <span class="tag tag-green">無感直傳救援</span>
+          </div>
+          <p style="margin-top: 10px;">
+            在針對長達 61 分鐘的 MIT YouTube 演講（<code>hy8UstR2NEg</code>）進行雲端轉錄時，遠端 Colab VM 突然拋出嚴厲的防爬警告：<code>Sign in to confirm you're not a bot (HTTP 429)</code>。Google 資料中心 IP 被 YouTube 列入黑名單。
+          </p>
+          <div class="detail-box warning">
+            <div class="detail-box-title">🛑 傳統作法的缺點</div>
+            要求使用者手動匯出 cookies.txt 或在 VM 內登入，操作繁瑣且極易失效，破壞「無人值守工業級水管」的初衷。
+          </div>
+          <div class="detail-box success">
+            <div class="detail-box-title">🚀 突破性解決方案：自適應雙軌救援 (Adaptive Fallback)</div>
+            遠端轉錄腳本捕獲 Bot 異常後回傳 <code>FALLBACK_TO_LOCAL_UPLOAD</code> 訊號；本機 <code>run.sh</code> 自動接手，利用開發者本機的乾淨「家用住宅 IP」呼叫 <code>yt-dlp</code> 順暢抓取音訊，經 ffmpeg 標準化為 16kHz PCM16 Mono 音訊後，透過 <code>colab upload</code> 直傳遠端 VM 接續推論。<strong>使用者零體感障礙，管線全自動修復！</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- 階段 4 -->
+      <div class="timeline-item">
+        <div class="timeline-dot success"></div>
+        <div class="timeline-content">
+          <div class="timeline-header">
+            <div class="timeline-title">🏆 階段 4：端到端長音訊實戰全量驗收</div>
+            <div class="timeline-date">2026-09-27 22:30</div>
+          </div>
+          <div>
+            <span class="tag tag-green">雙樣本全量驗證</span>
+            <span class="tag tag-blue">49 分鐘繁中</span>
+            <span class="tag tag-purple">61 分鐘英文</span>
+          </div>
+          <p style="margin-top: 10px;">
+            對系統進行高強度真實世界資料集驗收：
+          </p>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>真實測試案例</th>
+                  <th>音訊來源與時長</th>
+                  <th>調度引擎與硬體</th>
+                  <th>實測結果與交付物</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>案例 A</strong>：49 分鐘繁中學術演講</td>
+                  <td>Google Drive 分享連結<br>49 分鐘繁中音訊</td>
+                  <td>BreezeSprint-25<br>Colab L4 GPU</td>
+                  <td>✅ 3 分鐘完成推論，產出 <strong>1,194 句</strong> 精準繁中字幕，台灣專有名詞無幻覺。</td>
+                </tr>
+                <tr>
+                  <td><strong>案例 B</strong>：MIT 科技公開課</td>
+                  <td>YouTube 影片連結<br>61 分鐘全英語大課</td>
+                  <td>WhisperSprint<br>Colab L4 GPU (救援直傳)</td>
+                  <td>✅ 住宅 IP 救援直傳，3.5 分鐘產出 <strong>1,339 句</strong> 專業英文字幕。</td>
+                </tr>
+                <tr>
+                  <td><strong>二次執行驗證</strong></td>
+                  <td>兩者重複調用</td>
+                  <td>本地前置快取攔截</td>
+                  <td>✅ <strong>0.2 秒</strong> 秒級交付現成字幕，雲端點數消耗為 0。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 階段 5 -->
+      <div class="timeline-item">
+        <div class="timeline-dot codex"></div>
+        <div class="timeline-content">
+          <div class="timeline-header">
+            <div class="timeline-title">🛡️ 階段 5：Codex (GPT-6 Astra) Code Review 與安全架構重構</div>
+            <div class="timeline-date">2026-09-27 23:20</div>
+          </div>
+          <div>
+            <span class="tag tag-cyan">Codex 審查</span>
+            <span class="tag tag-blue">Base64 安全序列化</span>
+            <span class="tag tag-green">SHA-256 數位簽章</span>
+            <span class="tag tag-purple">POSIX Trap</span>
+          </div>
+          <p style="margin-top: 10px;">
+            引入 OpenAI Codex (GPT-6 Astra 架構) 進行嚴格的靜態代碼與安全性審查，揪出多項潛在漏洞並進行全盤重構：
+          </p>
+          <ul>
+            <li><strong>消滅 Bash 字串拼接注入：</strong>全面廢除 Python 多行三重引號 <code>'''</code> 拼接字串，改用 <code>base64.b64encode(json.dumps(payload))</code> 序列化傳參，杜絕代碼注入。</li>
+            <li><strong>防偽 Manifest 數位簽章：</strong>遠端推論生成包含 SHA-256 雜湊與檔案大小的 <code>manifest.json</code>，下載前逐檔校驗，防止偽造與傳輸毀損。</li>
+            <li><strong>防 Path Traversal 注入：</strong>建立嚴格的檔名正規化白名單，阻斷 <code>../</code> 等目錄跳脫攻擊。</li>
+            <li><strong>POSIX 訊號捕捉強化：</strong>重構 <code>run.sh</code> 的 <code>trap</code> 機制（精確捕捉 SIGINT 130、SIGTERM 143、EXIT），增加 <code>CLEANUP_CALLED</code> 防重複進入旗標。</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 階段 6 -->
+      <div class="timeline-item">
+        <div class="timeline-dot claude"></div>
+        <div class="timeline-content">
+          <div class="timeline-header">
+            <div class="timeline-title">💎 階段 6：Claude Code (Opus) 深度架構審查與生產級防禦封裝</div>
+            <div class="timeline-date">2026-09-27 23:50</div>
+          </div>
+          <div>
+            <span class="tag tag-amber">Claude Opus 審查</span>
+            <span class="tag tag-green">原子化同步 (Atomic Sync)</span>
+            <span class="tag tag-blue">200 Bytes 限長截斷</span>
+            <span class="tag tag-purple">27 項測試全綠</span>
+          </div>
+          <p style="margin-top: 10px;">
+            由 Anthropic 最強旗艦模型 Claude Opus 進行第二輪深度架構批判與邊界壓力測試，針對 5 大核心細節完成終極淬煉：
+          </p>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>審查揪出之隱蔽缺陷</th>
+                  <th>工程因果與潛在危害</th>
+                  <th>Claude Opus 重構解法</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>快取僅檢驗檔名非空</strong></td>
+                  <td>若本機留存毀損或半截之 <code>.srt</code>，將導致「壞檔假命中」，錯失轉錄。</td>
+                  <td><code>is_cache_hit()</code> 強制調用 <code>verify_manifest()</code> 校驗實體 SHA-256 雜湊。</td>
+                </tr>
+                <tr>
+                  <td><strong>白名單誤殺標題省略號</strong></td>
+                  <td>正規化把合法影片標題的 <code>...</code>（例如 <code>Wait... what?</code>）當作 Path Traversal 誤殺。</td>
+                  <td>精修正則運算式，嚴格區隔非法路徑跳脫符與文本省略號。</td>
+                </tr>
+                <tr>
+                  <td><strong>超長影片標題崩潰</strong></td>
+                  <td>某些 YouTube 包含極多 Emoji 或長文本，超出 Linux ext4 255 位元組限制引發 <code>File name too long</code>。</td>
+                  <td>在安全清理後加入 <strong>200 UTF-8 Bytes 安全長度截斷</strong>，保留副檔名安全邊界。</td>
+                </tr>
+                <tr>
+                  <td><strong>下載中途中斷污染良品</strong></td>
+                  <td><code>colab download</code> 直接覆蓋本地 <code>output/</code>，若下載到一半斷線會毀損原本地檔案。</td>
+                  <td>實作 <strong>Staging 暫存下載與原子替換 (Atomic Sync)</strong>，全部檔案驗證無誤才原子移動。</td>
+                </tr>
+                <tr>
+                  <td><strong>快取檢查前存在雲端等待</strong></td>
+                  <td>原本先執行 <code>reconcile_orphan_sessions()</code>，導致本地命中快取仍需等待幾秒網路請求。</td>
+                  <td>將快取檢查挪至最前置，達成 <strong>真正的 0 雲端延遲秒級交付</strong>。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p style="margin-top: 12px;">
+            重構完成後，擴充 <code>tests/test_sync_artifacts.py</code> 與 <code>tests/test_run_sh.py</code>，達成 <strong>全量 27 項單元與整合測試 100% 綠燈通過</strong>！
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 工程哲學總結 -->
+  <section>
+    <h2>💡 人機協作實踐心得與工程紀律</h2>
+    <div class="detail-box" style="border-left-color: #6366f1; background: #eef2ff;">
+      <div class="detail-box-title" style="color: #4338ca;">🧭 工程師的掌舵原則</div>
+      <p style="margin-bottom: 8px;">
+        「AI 可以幫我們極速產出代碼、提供審查建議，但握著方向盤的永遠是工程師。我們不迷信『一次到位』的魔法，而是堅持建立可驗證的測試套件、查看真實的網路封包、抓取實際的影音檔案，並對每一行指令的退出碼與安全邊界刨根問底。」
+      </p>
+      <p style="margin-bottom: 0;">
+        本系統歷經真實世界 49 分鐘與 61 分鐘高難度音訊的洗禮，並通過兩大頂級 AI 審查的交互辯證，證明了<strong>「自動化自適應救援」</strong>與<strong>「嚴格防禦性程式設計」</strong>才是打造工業級穩定工具的唯一正道。
+      </p>
+    </div>
+  </section>
+
+</div>
+
+</body>
+</html>

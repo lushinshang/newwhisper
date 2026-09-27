@@ -1,0 +1,28 @@
+[project]
+name = "colab-dual-asr"
+version = "0.1.0"
+description = "智慧語音轉錄雙引擎分流與 Colab 原生直連排程系統"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "yt-dlp>=2025.1.0",
+    "requests>=2.32.0",
+    "gdown>=5.2.0",
+    "pydub>=0.25.1",
+    "google-colab-cli",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-mock>=3.14.0",
+]
+
+[tool.uv.sources]
+google-colab-cli = { git = "https://github.com/googlecolab/google-colab-cli.git" }
+jupyter-kernel-client = { git = "https://github.com/googlecolab/jupyter-kernel-client.git" }
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
