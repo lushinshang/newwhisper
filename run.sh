@@ -252,17 +252,50 @@ if grep -qE "FALLBACK_REQUIRED|BOT_DETECTED|403|Forbidden|Sign in to confirm|con
     echo -e "${YELLOW}⚠️ [自適應機制] 偵測到雲端機房 IP 下載受阻 (403/429)，立即無縫啟動本地住宅網路救援直傳...${NC}"
     LOCAL_STAGING="${SCRIPT_DIR}/output/.staging"
     mkdir -p "$LOCAL_STAGING"
-    PRELOAD_WAV=$(uv run --directory "$SCRIPT_DIR" python3 -c "
+    PRELOAD_WAV="${LOCAL_STAGING}/input.wav"
+
+    # 執行本地下載並強制規格化至目標 input.wav，所有日誌導向 stderr 杜絕 stdout 污染
+    if ! uv run --directory "$SCRIPT_DIR" python3 - "$URL" "$LOCAL_STAGING" "$PRELOAD_WAV" 1>&2 <<'PY'
 import sys
+import shutil
+from pathlib import Path
 from scripts.universal_download import process_audio_source
-wavs = process_audio_source(sys.argv[1], output_dir='$LOCAL_STAGING')
-print(wavs[0])
-" "$URL")
+
+url, staging, target_path = sys.argv[1:4]
+wavs = process_audio_source(url, output_dir=staging)
+if not wavs or not Path(wavs[0]).is_file() or Path(wavs[0]).stat().st_size <= 44:
+    raise RuntimeError(f"本地音訊處理失敗，產出無效檔案: {wavs}")
+
+src = Path(wavs[0]).resolve()
+dst = Path(target_path).resolve()
+if src != dst:
+    shutil.copyfile(src, dst)
+PY
+    then
+        echo -e "${RED}❌ 本地住宅網路音訊救援處理失敗！${NC}"
+        rm -f "$LOG_PIPE"
+        exit 1
+    fi
+
+    # 檢查本地檔案非空
+    if [ ! -s "$PRELOAD_WAV" ]; then
+        echo -e "${RED}❌ 本地音訊檔案不存在或大小為 0: ${PRELOAD_WAV}${NC}"
+        rm -f "$LOG_PIPE"
+        exit 1
+    fi
+
+    # 確保遠端暫存目錄 /content/audio_staging 存在
+    uv run --directory "$SCRIPT_DIR" colab exec -s "$SESSION_NAME" --timeout 60 1>&2 <<'PY'
+import os
+os.makedirs("/content/audio_staging", exist_ok=True)
+PY
+
     echo -e "${GREEN}✅ 本地音訊已就緒，正在直傳至雲端會話 [${SESSION_NAME}]...${NC}"
     uv run --directory "$SCRIPT_DIR" colab upload -s "$SESSION_NAME" "$PRELOAD_WAV" "content/audio_staging/input.wav"
     
     echo -e "${BLUE}🚀 [接力推論] 音訊直傳完畢，重啟遠端 GPU 推論管線...${NC}"
     ENV_INJECT=$(build_env_inject "$URL" "$ENGINE" "$TITLE_BASE" "/content/audio_staging/input.wav")
+    ENV_INJECT+=$'\nimport os\nif not os.path.isfile(os.environ.get("TRANSCRIPTION_PRELOADED_AUDIO", "")) or os.path.getsize(os.environ.get("TRANSCRIPTION_PRELOADED_AUDIO", "")) <= 44: raise RuntimeError("遠端預載音訊驗證失敗，檔案不存在或為空！")'
     { echo "$ENV_INJECT"; cat "$EXEC_SCRIPT"; } | uv run --directory "$SCRIPT_DIR" colab exec -s "$SESSION_NAME" --timeout 3600 2>&1 | tee "$LOG_PIPE"
 fi
 

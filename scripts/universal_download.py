@@ -7,6 +7,7 @@
 
 import os
 import re
+import subprocess
 import sys
 import time
 from datetime import datetime
@@ -183,7 +184,16 @@ def download_from_youtube(video_url: str, output_dir: str = ".") -> list[str]:
     from yt_dlp import YoutubeDL
 
     os.makedirs(output_dir, exist_ok=True)
-    out_template = os.path.join(output_dir, "%(title)s.%(ext)s")
+    out_template = os.path.join(output_dir, "%(id)s.%(ext)s")
+
+    final_paths: list[str] = []
+
+    def _on_postprocessor_event(d: dict) -> None:
+        if d.get("status") == "finished":
+            info_dict = d.get("info_dict") or {}
+            fp = info_dict.get("filepath")
+            if fp:
+                final_paths.append(fp)
 
     ydl_opts = {
         "format": "bestaudio/best",
@@ -192,6 +202,7 @@ def download_from_youtube(video_url: str, output_dir: str = ".") -> list[str]:
         "outtmpl": out_template,
         "noplaylist": True,
         "quiet": False,
+        "logtostderr": True,
         "no_warnings": True,
         "retries": 5,
         "fragment_retries": 5,
@@ -206,6 +217,7 @@ def download_from_youtube(video_url: str, output_dir: str = ".") -> list[str]:
                 "player_client": ["tv", "android"]
             }
         },
+        "final_ext": "wav",
         "postprocessors": [
             {
                 "key": "FFmpegExtractAudio",
@@ -213,22 +225,37 @@ def download_from_youtube(video_url: str, output_dir: str = ".") -> list[str]:
                 "preferredquality": "192",
             }
         ],
+        "postprocessor_hooks": [_on_postprocessor_event],
     }
 
     with YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(video_url, download=True)
-        title = info.get("title", f"yt_{int(time.time())}")
-        # 清理潛在特殊字元
-        safe_title = re.sub(r'[\\/*?:"<>|]', "_", title)
-        # 尋找輸出之 wav 檔案
-        candidate = os.path.join(output_dir, f"{title}.wav")
-        if os.path.exists(candidate):
-            return [candidate]
-        # 遍歷目錄尋找相符檔案
-        for f in Path(output_dir).glob("*.wav"):
-            if title in f.name:
-                return [str(f)]
-        return [candidate]
+
+    if not isinstance(info, dict) or info.get("entries") is not None:
+        raise RuntimeError("YouTube 下載只接受單一影音來源")
+
+    filepath = None
+    if final_paths:
+        filepath = final_paths[-1]
+    else:
+        req_dl = info.get("requested_downloads") or []
+        if req_dl and req_dl[0].get("filepath"):
+            filepath = req_dl[0]["filepath"]
+        elif info.get("filepath"):
+            filepath = info["filepath"]
+
+    if not filepath or not os.path.exists(filepath):
+        vid = info.get("id")
+        if vid:
+            for f in Path(output_dir).glob(f"*{vid}*.wav"):
+                filepath = str(f)
+                break
+
+    if not filepath or not os.path.exists(filepath):
+        raise FileNotFoundError(f"無法定位下載後的音訊檔案 (video_id: {info.get('id', 'unknown')})")
+
+    normalized = convert_to_wav(filepath)
+    return [normalized]
 
 
 def process_audio_source(url: str, output_dir: str = ".") -> list[str]:
